@@ -92,6 +92,7 @@ eclipse {
 
 idea {
   project {
+    // Using Java 8, as that's the latest version currently  supported by the AWS Lambda service
     jdkName = '8'
     languageLevel = '8'
   }
