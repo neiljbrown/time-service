@@ -26,5 +26,5 @@ spring.profiles.active: local
 # Application info
 # ----------------
 info.app.name: Time service
-info.app.description: Backend service providing web APIs supporting (date and) time related functionality.
+info.app.description: Sample backend service providing web APIs supporting (date and) time related functionality.
 info.app.version: 0.0.1

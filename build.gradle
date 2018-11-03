@@ -67,6 +67,7 @@ dependencies {
   testCompileOnly("org.apiguardian:apiguardian-api:${apiguardianApiVersion}")
 
   testCompile("org.assertj:assertj-core:${assertjVersion}")
+  testCompile('org.springframework.boot:spring-boot-starter-test')
 
   // Runtime dependencies
   testRuntime("org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}")
