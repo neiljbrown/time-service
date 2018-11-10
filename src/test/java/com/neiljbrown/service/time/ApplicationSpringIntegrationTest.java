@@ -22,7 +22,7 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 /**
- * Integration tests for {@link Application}.
+ * A (narrow) set of Spring container integration tests for {@link Application}.
  * <p>
  * Provides a cursory test of the integration of the application with Spring / Spring Boot, including the application's
  * dependency injection config (wiring of Spring managed 'beans') for the selected current bean profile(s).
@@ -35,7 +35,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 // Bootstrap app using Spring Boot support e.g. load application.properties, create default beans based on classpath etc
 // Load a WebApplicationContext that uses a MockServletContext, rather than launching full web container
 @SpringBootTest(classes = Application.class, webEnvironment = WebEnvironment.MOCK)
-class ApplicationIntegrationTest {
+public class ApplicationSpringIntegrationTest {
 
   /**
    * Tests that the application's entire Spring bean configuration for the active bean profile(s) is valid (without the
