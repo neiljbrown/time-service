@@ -13,23 +13,29 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+
 buildscript {
   ext {
   }
 
   repositories {
-    jcenter()
+    gradlePluginPortal()
     mavenCentral()
+    jcenter()
   }
 
   dependencies {
     classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    classpath("com.bmuschko:gradle-docker-plugin:${gradleDockerPluginVersion}")
   }
 }
 
 // *********************************************************************************************************************
 // Enable plugins
 // *********************************************************************************************************************
+apply plugin: 'com.bmuschko.docker-remote-api'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply plugin: 'java'
@@ -41,7 +47,9 @@ apply plugin: 'io.spring.dependency-management'
 // Project Properties
 // *********************************************************************************************************************
 // Standard project properties. These are used as default values by some assembly and release task, e.g. jar
-// See gradle.properties and settings.gradle
+// See gradle.properties and settings.gradle, e.g.
+//project.name - Property defined in settings.gradle, overriding the default used by Gradle which is based on proj dir
+//project.version - Property defined in gradle.properties
 
 // Extra user-defined project properties
 ext {
@@ -85,6 +93,24 @@ bootRun {
   )
 }
 
+// Configures Docker related tasks provided by Gradle docker plugin https://github.com/bmuschko/gradle-docker-plugin
+docker {
+  // URL of the Docker Engine API of the Docker host/daemon used to manage (build, publish) Docker images
+  url = project.findProperty('dockerServerUrl') ?: url
+
+  // Path to SSL certs needed to authenticate with Docker daemon if it's configured to require TLS verification
+  // when communicating over HTTPS
+  certPath = project.hasProperty('dockerServerCertPath') ? new File("${dockerServerCertPath}") : certPath
+
+  // Optional Docker registry & creds to use when pushing/pulling images if not using default public Docker Hub registry
+  registryCredentials {
+    url = project.findProperty('dockerRegistryUrl') ?: registryCredentials.url
+    username = project.findProperty('dockerRegistryUsername') ?: registryCredentials.username
+    password = project.findProperty('dockerRegistryPassword') ?: registryCredentials.password
+    email = project.findProperty('dockerRegistryEmail') ?: registryCredentials.email
+  }
+}
+
 eclipse {
   classpath {
     downloadJavadoc = true  // defaults to 'false'
@@ -118,4 +144,55 @@ task javadocTests(type: Javadoc, group: "documentation" ) {
   classpath = configurations.testCompile
   options.links(project.ext.javadocLinks)
   options.addBooleanOption('html5',true)
+}
+
+//-------------------------------------------------------------------------------------------------------- Docker tasks
+
+/**
+ * Creates a temp build sub-dir representing the Docker build 'context' and populates it with the files needed to build
+ * the service's Docker image, including the Dockerfile and the deployed artifacts it references.
+ * <p>
+ * Using a dedicated dir for the build context containing just the necessary files (rather than e.g. the project dir)
+ * makes generating the Docker image more efficient (less files to be uploaded to the Docker daemon) and removes need
+ * for a .dockerignore file.
+ */
+task dockerAssembleBuildContext(type: Copy, dependsOn: assemble) {
+  ext.contextDir = "$buildDir/docker"
+  from 'Dockerfile'
+  from(jar.archivePath) {
+    // Remove version from JAR filename, as Docker image is versioned (tagged), and avoids need for template Dockerfile
+    rename { filename -> filename.replace("-$jar.version", "") }
+  }
+  into ext.contextDir
+  eachFile {
+    logger.info("Copying [$it.file] to [$ext.contextDir].")
+  }
+}
+
+/**
+ * Builds a version of the service's Docker image from a previously assembled build context dir.
+ * <p>
+ * This task doesn't implement an up-to-date check, so will always execute when declared as a dependency, however
+ * repeat execution of the task does not result in duplicate docker images being created as the docker build command
+ * only creates and register a new image with the Docker host if the image inputs (docker build context) has changed.
+ * This can be seen by running the 'docker images' command before and after execution of the task.
+ */
+// Implemented using Gradle plugin https://github.com/bmuschko/gradle-docker-plugin
+task dockerBuildImage(type: DockerBuildImage, dependsOn: dockerAssembleBuildContext) {
+  ext.dockerImageName = "${dockerRegistryUsername}/${dockerRepositoryName}"
+  description = "Builds a version of the service's Docker image."
+  inputDir = file(dockerAssembleBuildContext.contextDir)
+  tag = "$dockerImageName:$project.version"
+}
+
+/**
+ * Pushes a version of the service's previously built Docker image to the project's configured Docker registry.
+ */
+// Implemented using Gradle plugin https://github.com/bmuschko/gradle-docker-plugin
+task dockerPushImage(type: DockerPushImage, dependsOn: dockerBuildImage) {
+  description = "Pushes the previously built version of the service's Docker image to project's Docker registry."
+  // Image name must match the relative path of repo in Docker registry e.g. 'neiljbrown/spring-faas-time-service'
+  imageName = dockerBuildImage.dockerImageName
+  // Set tag property so only a specific version of the image is published, rather than all previously built versions
+  tag = project.version
 }
