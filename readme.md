@@ -1,13 +1,9 @@
 # Time service sample app
 
 ## Overview
-This project contains a sample app known as the 'Time service'. It's a simple, but realistic backend service that 
-provides a couple of external REST APIs, built using Java and Spring Boot, and packaged & deployed as Docker container. 
-
-This sample app supports the exercise of trialling the re-implementation of a Java/Spring container based backend 
-service to run on serverless/FaaS platforms (such as AWS Lambda) using various supporting frameworks (e.g. AWS 
-libraries/SAM; Spring Cloud function; the 'Serverless' framework etc), including investigating performance concerns 
-(e.g. app start-up aka cold-ssart times; memory usage, etc).
+This project contains a sample REST API service known as the 'Time service'. It's a simple, but realistic backend 
+service that provides a couple of external REST APIs, built using Java and Spring Boot, and packaged & deployed as 
+Docker container. 
 
 ### Application software stack
 The service is built on a software stack of Java (8.x), Spring Boot 2.1.x / Spring (5.1.x) and Tomcat (9) web 
@@ -32,7 +28,7 @@ The project uses the standard Maven directory layout for a Java app. Java source
 src/main/java and src/main/resources folders respectively. Automated test code and resources can be found in  
 the src/test/java and src/test/resources folders.  
 
-### Building the service
+## Building the service
 The service is built, tested and released using Gradle. For a list of available build tasks enter the following 
 command in the project root directory:
 
@@ -56,7 +52,7 @@ To assemble the service, and additionally run the service's checks (tests and an
 
 For more details see build.gradle in the project root directory.
 
-### Running the service 
+## Running the service 
 You can run the service 'in-place' (without assembling it) from your workspace using the following command:
 
 ```./gradlew bootRun```
@@ -69,13 +65,13 @@ assembled JAR in a background process attached to your shell, enter the followin
 
 ```
 ./gradlew assemble
-java -jar ./build/libs/time-service-{version}.jar [--spring.profiles.active=dev] &
+java -jar ./build/libs/time-service-{version}.jar [--spring.profiles.active=local] &
 ```
 
 where {version} is the project version, e.g. 0.0.1-snapshot.
 
 The 'spring.profiles.active' option is used to select the Spring bean profiles which should be activated. This defaults 
-to 'dev' - the base profile for the development environment. For more details see the comments in the service's 
+to 'local' - the base profile for the development environment. For more details see the comments in the service's 
 application config file - src/main/resources/application.yaml.  
  
 If the service starts up successfully you will see a pageful of info-level logs output to your screen, which will 
