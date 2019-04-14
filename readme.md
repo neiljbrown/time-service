@@ -1,15 +1,15 @@
 # Time service sample app
 
-## Overview
+## 1) Overview
 This project contains a sample REST API service known as the 'Time service'. It's a simple, but realistic backend 
 service that provides a couple of external REST APIs, built using Java and Spring Boot, and packaged & deployed as 
 Docker container. 
 
-### Application software stack
+## 2) Application software stack
 The service is built on a software stack of Java (8.x), Spring Boot 2.1.x / Spring (5.1.x) and Tomcat (9) web 
 container (Servlet API 4.0).
 
-### Dev Environment Setup / Prerequisites
+## 3) Dev Environment Setup / Prerequisites
 To build, test, package, deploy and run this project locally you will need a dev env comprising the following  -    
   
 *1) JDK* - Install the correct major version (see above) of the JDK used by this service to support compiling the 
@@ -23,36 +23,63 @@ more details.
 server/engine) to be installed in the dev ('local') environment. For non-Linux (i.e. Mac OS X, or Windows) dev 
 environments, install Docker using the corresponding native app (e.g. Docker for Mac).
 
-## Source Code
+## 4) Source Code
 The project uses the standard Maven directory layout for a Java app. Java source code and resoures can be found in the 
-src/main/java and src/main/resources folders respectively. Automated test code and resources can be found in  
-the src/test/java and src/test/resources folders.  
+src/main/java and src/main/resources folders respectively. Automated test code and resources can be found in the 
+src/test/java and src/test/resources folders.
 
-## Building the service
-The service is built, tested and released using Gradle. For a list of available build tasks enter the following 
-command in the project root directory:
+## 5) Service Build Script  
+Building, testing and releasing of the service is automated using a Gradle 'build' script. For a list of available 
+build tasks enter the following command in the project root directory:
 
 ```./gradlew tasks```
 
+For more details see build.gradle in the project root directory.
+
+## 6) Automated Tests
 Automated unit tests and fine-grained intra-service integration tests (that entail launching the Spring container) are 
-implemented in JUnit (5) and AssertJ . To execute the unit tests from the command line, enter the following command:
+implemented in JUnit (5) and AssertJ. To execute the unit tests from the command line, enter the following command:
 
 ```./gradlew test```
 
+### 6.1) Component Testing
+Component tests are types of automated tests in which the functionality of the service's web APIs are tested 
+end-to-end  <i>within</i> the app/service, from receipt of an external HTTP request from an API client, 
+through the whole stack, including integrations with stubbed external processes, via real API clients, over the wire, 
+and generation and return of the response.
+
+Component tests are typically implemented using Spring Boot's test support for launching the production web container 
+in the context/scope of the execution of a JUnit test, e.g.  
+```java
+@ExtendWith(SpringExtension.class)
+// webEnvironment - Set to 'RANDOM_PORT' to signify that these are component tests that should launch and run in the
+// production web container (and bind to and listen on a random HTTP port).
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+public class MyApiComponentTest { 
+  //... 
+}
+``` 
+
+A 'service virtualisation' tool, such as WireMock, can be used to stub external remote web APIs/services.
+
+This sample app/service is atypical in that, for reasons of simplicity, it does not have any external remote 
+dependencies (such as downstream microservices, or even its own external data-store/DB). As a result it does not 
+need, and therefore does not currently have, any examples of Component tests. (TODO - These may be added later just 
+to provide an example, reference implementation of a Component test for a web API).  
+
+## 7) Building the service
 To assemble (compile and package) the service execute the following commands:
 
 ```./gradlew assemble```
 
 This will create an executable, fat JAR in the build/libs folder.
 
-To assemble the service, and additionally run the service's checks (tests and any coding standards) beforehand, use the 
-'build' task, e.g.  
+To assemble the service _and_ additionally run the service's checks (tests and any coding standards) beforehand, use 
+the 'build' task, e.g.  
 
 ```./gradlew build``` 
 
-For more details see build.gradle in the project root directory.
-
-## Running the service 
+## 8) Running the service 
 You can run the service 'in-place' (without assembling it) from your workspace using the following command:
 
 ```./gradlew bootRun```
